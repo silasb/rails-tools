@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+
+EDITOR = (ENV['EDITOR'] || 'vim')
+RAILS_ROOT = ENV['RAILS_ROOT']
+
+if RAILS_ROOT.nil?
+  current_dir = Dir.getwd
+  if not File.exists?(File.join(current_dir, 'config/boot.rb'))
+    puts 'No rails root setup'
+    puts 'If you want to run this without being inside of a rails directory then set your env RAILS_ROOT to your project dir'
+    exit
+  end
+end
+
+type = ARGV[0]
+pattern = case type
+  when 'controller' then RAILS_ROOT.nil? ? "app/controllers" : "#{RAILS_ROOT}app/controllers"
+  when 'model' then RAILS_ROOT.nil? ? "app/models" : "#{RAILS_ROOT}app/models"
+  when 'view' then "#{RAILS_ROOT}/app/view"
+  when 'functional_test' then "#{RAILS_ROOT}/test/functional"
+  when 'integration_test' then "#{RAILS_ROOT}/test/integration"
+  when 'unit_test' then "#{RAILS_ROOT}/test/unit"
+end
+ARGV.shift
+
+p pattern
+if pattern.nil?
+  puts 'Something messed up'
+  exit
+end
+
+files = []
+
+ARGV.each do |b|
+  case type
+    when 'controller' then b += '_controller.rb'
+    when 'functional_test' then b += '_controller_test.rb'
+    when 'integration_test' then b += '_integration_test.rb'
+    when 'unit_test' then b += '_test.rb'
+    else b += '.rb'
+  end
+
+  if not File.exists?(File.join(pattern, b))
+    puts "No file: #{b} in #{pattern}"
+    exit
+  end
+  files << File.join(pattern, b)
+end
+
+files_for_editor = files.join(' ')
+
+command = %Q[#{EDITOR} #{files_for_editor}]
+puts command
+system(command)
+
+# vim: ft=ruby
